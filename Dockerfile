@@ -34,7 +34,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* \
     && groupmod -g 1000 users \
     && useradd -u 911 -U -d /config -s /bin/false abc \
-    && usermod -G users abc
+    && usermod -G users abc \
+    && mv /usr/sbin/openvpn /usr/sbin/openvpn-qnapfix
 
 
 # Add configuration and scripts

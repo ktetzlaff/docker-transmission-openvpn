@@ -332,4 +332,4 @@ if [[ ${SELFHEAL:-false} != "false" ]]; then
 fi
 
 # shellcheck disable=SC2086
-exec openvpn ${TRANSMISSION_CONTROL_OPTS} ${OPENVPN_OPTS:-} --config "${CHOSEN_OPENVPN_CONFIG}"
+exec openvpn-qnapfix ${TRANSMISSION_CONTROL_OPTS} ${OPENVPN_OPTS:-} --config "${CHOSEN_OPENVPN_CONFIG}"
