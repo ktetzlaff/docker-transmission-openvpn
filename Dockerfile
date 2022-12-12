@@ -70,7 +70,7 @@ RUN echo "installing Transmission" && set -x \
 
 RUN apt-get update && apt-get install -y \
     dumb-init openvpn privoxy \
-    tzdata dnsutils iputils-ping ufw openssh-client git jq curl wget unrar unzip bc \
+    tzdata dnsutils iputils-ping ufw openssh-client git jq curl wget unrar unzip bc acl \
     && ln -s /usr/local/share/transmission/public_html/images /opt/transmission-ui/transmission-web-control \
     && ln -s /usr/local/share/transmission/public_html/transmission-app.js /opt/transmission-ui/transmission-web-control/transmission-app.js \
     && ln -s /usr/local/share/transmission/public_html/index.html /opt/transmission-ui/transmission-web-control/index.original.html \
