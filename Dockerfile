@@ -24,9 +24,27 @@ VOLUME /config
 COPY --from=TransmissionUIs /opt/transmission-ui /opt/transmission-ui
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y \
-    dumb-init openvpn transmission-daemon transmission-cli privoxy \
-    tzdata dnsutils iputils-ping ufw openssh-client git jq curl wget unrar unzip bc acl \
+
+# KTKT: some fixes to allow ubuntu 22.04 to work on older docker engine:
+#
+# Note: Ideally, docker build would support `--security-opts=seccomp:unconfined`.
+# However, this is not the case with docker engine 17.09 on QNAP.
+#
+# 1. /etc/apt/apt.conf.d/docker-clean: comment out APD/DPkg config lines
+RUN sed -i -e 's/^APT/# APT/' -e 's/^DPkg/# DPkg/' /etc/apt/apt.conf.d/docker-clean
+# 2. apt-get update: add `--allow-insecure-repositories` to fix error during
+#    `apt update` (The key(s) in the keyring
+#    /etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg are ignored as the
+#    file is not readable by user '_apt' executing apt-key.)
+# 3. apt-get install:
+#    - add `--allow-unauthenticated` to allow installing packages from insecure
+#      repositories
+#    - remove ufw and privoxy packages (they generate errors during installation
+#      and I don't use them)
+#    - add python3 package (since it is not installed as dependency of ufw anymore)
+RUN apt-get update --allow-insecure-repositories && apt-get install -y --allow-unauthenticated \
+    dumb-init openvpn transmission-daemon transmission-cli python3 \
+    tzdata dnsutils iputils-ping openssh-client git jq curl wget unrar unzip bc acl \
     && ln -s /usr/share/transmission/web/style /opt/transmission-ui/transmission-web-control \
     && ln -s /usr/share/transmission/web/images /opt/transmission-ui/transmission-web-control \
     && ln -s /usr/share/transmission/web/javascript /opt/transmission-ui/transmission-web-control \
