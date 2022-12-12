@@ -37,6 +37,9 @@ RUN apt-get update && apt-get install -y \
     && usermod -G users abc \
     && mv /usr/sbin/openvpn /usr/sbin/openvpn-qnapfix
 
+# KTKT: Update shift.css with my own (dark) variant
+ADD shift-kt.css /opt/transmission-ui/shift/shift.css
+
 
 # Add configuration and scripts
 ADD openvpn/ /etc/openvpn/
