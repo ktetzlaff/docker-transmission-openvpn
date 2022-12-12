@@ -35,11 +35,13 @@ fi
 
 # If create_tun_device is set, create /dev/net/tun
 if [[ "${CREATE_TUN_DEVICE,,}" == "true" ]] ; then
-  echo "Creating TUN device /dev/net/tun"
-  rm -f /dev/net/tun
-  mkdir -p /dev/net
-  mknod /dev/net/tun c 10 200
-  chmod 0666 /dev/net/tun
+  TUN_DEVICE='/dev/net/tun'
+  echo "Creating TUN device ${TUN_DEVICE}"
+  rm -f "${TUN_DEVICE}"
+  mkdir -p "$(dirname "${TUN_DEVICE}")"
+  mknod "${TUN_DEVICE}" c 10 200
+  chmod 0666 "${TUN_DEVICE}"
+  unset TUN_DEVICE
 fi
 
 ##
@@ -174,40 +176,47 @@ if [[ -x /scripts/openvpn-post-config.sh ]]; then
 fi
 
 mkdir -p /config
+OPENVPN_CREDENTIALS='/config/openvpn-credentials.txt'
 #Handle secrets if found
 if [[ -f /run/secrets/openvpn_creds ]]; then
   #write creds if no file or contents are not the same.
-  if [[ ! -f /config/openvpn-credentials.txt ]] || [[ "$(cat /run/secrets/openvpn_creds)" != "$(cat /config/openvpn-credentials.txt)" ]]; then
+  if [[ ! -f "${OPENVPN_CREDENTIALS}" ]] || [[ "$(cat /run/secrets/openvpn_creds)" != "$(cat "${OPENVPN_CREDENTIALS}")" ]]; then
     echo "Setting OpenVPN credentials..."
-    cp /run/secrets/openvpn_creds /config/openvpn-credentials.txt
+    cp /run/secrets/openvpn_creds "${OPENVPN_CREDENTIALS}"
   fi
 else
   # add OpenVPN user/pass
   if [[ "${OPENVPN_USERNAME}" == "**None**" ]] || [[ "${OPENVPN_PASSWORD}" == "**None**" ]]; then
-    if [[ ! -f /config/openvpn-credentials.txt ]]; then
+    if [[ ! -f "${OPENVPN_CREDENTIALS}" ]]; then
       echo "OpenVPN credentials not set. Exiting."
       exit 1
     fi
-    echo "Found existing OPENVPN credentials at /config/openvpn-credentials.txt"
+    echo "Found existing OPENVPN credentials at ${OPENVPN_CREDENTIALS}"
   else
     echo "Setting OpenVPN credentials..."
-    echo -e "${OPENVPN_USERNAME}\n${OPENVPN_PASSWORD}" > /config/openvpn-credentials.txt
-    chmod 600 /config/openvpn-credentials.txt
+    echo -e "${OPENVPN_USERNAME}\n${OPENVPN_PASSWORD}" > "${OPENVPN_CREDENTIALS}"
   fi
 fi
+if [[ -f "${OPENVPN_CREDENTIALS}" ]]; then
+  chmod 600 "${OPENVPN_CREDENTIALS}"
+fi
+unset OPENVPN_CREDENTIALS
 
+TRANSMISSION_CREDENTIALS='/config/transmission-credentials.txt'
 if [[ -f /run/secrets/rpc_creds ]]; then
   #write creds if no file or contents are not the same.
-  if [[ ! -f /config/transmission-credentials.txt ]] || [[ "$(cat /run/secrets/rpc_creds)" != "$(cat /config/transmission-credentials.txt)" ]]; then
+  if [[ ! -f "${TRANSMISSION_CREDENTIALS}" ]] || [[ "$(cat /run/secrets/rpc_creds)" != "$(cat ""${TRANSMISSION_CREDENTIALS}"")" ]]; then
     echo "Setting Transmission RPC credentials from docker secret..."
-    cp /run/secrets/rpc_creds /config/transmission-credentials.txt
-    export TRANSMISSION_RPC_USERNAME=$(head -1 /config/transmission-credentials.txt)
-    export TRANSMISSION_RPC_PASSWORD=$(tail -1 /config/transmission-credentials.txt)
+    cp /run/secrets/rpc_creds "${TRANSMISSION_CREDENTIALS}"
+    export TRANSMISSION_RPC_USERNAME=$(head -1 "${TRANSMISSION_CREDENTIALS}")
+    export TRANSMISSION_RPC_PASSWORD=$(tail -1 "${TRANSMISSION_CREDENTIALS}")
   fi
 else
-  echo "${TRANSMISSION_RPC_USERNAME}" > /config/transmission-credentials.txt
-  echo "${TRANSMISSION_RPC_PASSWORD}" >> /config/transmission-credentials.txt
+  echo "${TRANSMISSION_RPC_USERNAME}" > "${TRANSMISSION_CREDENTIALS}"
+  echo "${TRANSMISSION_RPC_PASSWORD}" >> "${TRANSMISSION_CREDENTIALS}"
 fi
+chmod 600 "${TRANSMISSION_CREDENTIALS}"
+unset TRANSMISSION_CREDENTIALS
 
 # Persist transmission settings for use by transmission-daemon
 export CONFIG="${CHOSEN_OPENVPN_CONFIG}"
@@ -323,4 +332,4 @@ if [[ ${SELFHEAL:-false} != "false" ]]; then
 fi
 
 # shellcheck disable=SC2086
-exec openvpn ${TRANSMISSION_CONTROL_OPTS} ${OPENVPN_OPTS} --config "${CHOSEN_OPENVPN_CONFIG}"
+exec openvpn ${TRANSMISSION_CONTROL_OPTS} ${OPENVPN_OPTS:-} --config "${CHOSEN_OPENVPN_CONFIG}"

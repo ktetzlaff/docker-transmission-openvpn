@@ -43,7 +43,7 @@ if [ -n "$PUID" ] && [ ! "$(id -u root)" -eq "$PUID" ]; then
         /config
 
     echo "Applying permissions to transmission config directory"
-    chmod -R go=rX,u=rwX \
+    chmod -R go+X,u=rwX \
         /config
 
     if [ "$GLOBAL_APPLY_PERMISSIONS" = true ] ; then
