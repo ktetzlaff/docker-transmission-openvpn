@@ -32,7 +32,7 @@ if [ -n "$PUID" ] && [ ! "$(id -u root)" -eq "$PUID" ]; then
         "${TRANSMISSION_HOME}"
 
     echo "Applying permissions to transmission directories"
-    chmod -R go=rX,u=rwX \
+    chmod -R go+X,u=rwX \
         /config \
         "${TRANSMISSION_HOME}"
 
